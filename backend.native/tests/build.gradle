@@ -923,7 +923,10 @@ standaloneTest("cleaner_in_main_without_checker") {
 standaloneTest("cleaner_leak_release") {
     enabled = !project.globalTestArgs.contains('-g') && (project.testTarget != 'wasm32') // Cleaners need workers
     source = "runtime/basic/cleaner_leak.kt"
-    goldValue = ""
+    if (cacheTesting != null) {
+        expectedExitStatusChecker = { it != 0 }
+        outputChecker = { s -> (s =~ /Cleaner (0x)?[0-9a-fA-F]+ was disposed during program exit/).find() }
+    }
 }
 
 standaloneTest("cleaner_leak_debug") {
