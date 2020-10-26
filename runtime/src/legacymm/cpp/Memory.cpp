@@ -3190,17 +3190,17 @@ bool TryAddHeapRef(const ObjHeader* object) {
   return tryAddHeapRef(object);
 }
 
-void ReleaseHeapRefStrict(const ObjHeader* object) {
+__attribute__((nothrow)) void ReleaseHeapRefStrict(const ObjHeader* object) {
   releaseHeapRef<true>(const_cast<ObjHeader*>(object));
 }
-void ReleaseHeapRefRelaxed(const ObjHeader* object) {
+__attribute__((nothrow)) void ReleaseHeapRefRelaxed(const ObjHeader* object) {
   releaseHeapRef<false>(const_cast<ObjHeader*>(object));
 }
 
-void ReleaseHeapRefNoCollectStrict(const ObjHeader* object) {
+__attribute__((nothrow)) void ReleaseHeapRefNoCollectStrict(const ObjHeader* object) {
   releaseHeapRef<true, /* CanCollect = */ false>(const_cast<ObjHeader*>(object));
 }
-void ReleaseHeapRefNoCollectRelaxed(const ObjHeader* object) {
+__attribute__((nothrow)) void ReleaseHeapRefNoCollectRelaxed(const ObjHeader* object) {
   releaseHeapRef<false, /* CanCollect = */ false>(const_cast<ObjHeader*>(object));
 }
 
@@ -3273,60 +3273,60 @@ OBJ_GETTER(InitSharedInstanceRelaxed,
   RETURN_RESULT_OF(initSharedInstance<false>, location, typeInfo, ctor);
 }
 
-void SetStackRefStrict(ObjHeader** location, const ObjHeader* object) {
+__attribute__((nothrow)) void SetStackRefStrict(ObjHeader** location, const ObjHeader* object) {
   setStackRef<true>(location, object);
 }
-void SetStackRefRelaxed(ObjHeader** location, const ObjHeader* object) {
+__attribute__((nothrow)) void SetStackRefRelaxed(ObjHeader** location, const ObjHeader* object) {
   setStackRef<false>(location, object);
 }
 
-void SetHeapRefStrict(ObjHeader** location, const ObjHeader* object) {
+__attribute__((nothrow)) void SetHeapRefStrict(ObjHeader** location, const ObjHeader* object) {
   setHeapRef<true>(location, object);
 }
-void SetHeapRefRelaxed(ObjHeader** location, const ObjHeader* object) {
+__attribute__((nothrow)) void SetHeapRefRelaxed(ObjHeader** location, const ObjHeader* object) {
   setHeapRef<false>(location, object);
 }
 
-void ZeroHeapRef(ObjHeader** location) {
+__attribute__((nothrow)) void ZeroHeapRef(ObjHeader** location) {
   zeroHeapRef(location);
 }
 
-void ZeroStackRefStrict(ObjHeader** location) {
+__attribute__((nothrow)) void ZeroStackRefStrict(ObjHeader** location) {
   zeroStackRef<true>(location);
 }
-void ZeroStackRefRelaxed(ObjHeader** location) {
+__attribute__((nothrow)) void ZeroStackRefRelaxed(ObjHeader** location) {
   zeroStackRef<false>(location);
 }
 
-void UpdateStackRefStrict(ObjHeader** location, const ObjHeader* object) {
+__attribute__((nothrow)) void UpdateStackRefStrict(ObjHeader** location, const ObjHeader* object) {
   updateStackRef<true>(location, object);
 }
-void UpdateStackRefRelaxed(ObjHeader** location, const ObjHeader* object) {
+__attribute__((nothrow)) void UpdateStackRefRelaxed(ObjHeader** location, const ObjHeader* object) {
   updateStackRef<false>(location, object);
 }
 
-void UpdateHeapRefStrict(ObjHeader** location, const ObjHeader* object) {
+__attribute__((nothrow)) void UpdateHeapRefStrict(ObjHeader** location, const ObjHeader* object) {
   updateHeapRef<true>(location, object);
 }
-void UpdateHeapRefRelaxed(ObjHeader** location, const ObjHeader* object) {
+__attribute__((nothrow)) void UpdateHeapRefRelaxed(ObjHeader** location, const ObjHeader* object) {
   updateHeapRef<false>(location, object);
 }
 
-void UpdateReturnRefStrict(ObjHeader** returnSlot, const ObjHeader* value) {
+__attribute__((nothrow)) void UpdateReturnRefStrict(ObjHeader** returnSlot, const ObjHeader* value) {
   updateReturnRef<true>(returnSlot, value);
 }
-void UpdateReturnRefRelaxed(ObjHeader** returnSlot, const ObjHeader* value) {
+__attribute__((nothrow)) void UpdateReturnRefRelaxed(ObjHeader** returnSlot, const ObjHeader* value) {
   updateReturnRef<false>(returnSlot, value);
 }
 
-void ZeroArrayRefs(ArrayHeader* array) {
+__attribute__((nothrow)) void ZeroArrayRefs(ArrayHeader* array) {
   for (uint32_t index = 0; index < array->count_; ++index) {
     ObjHeader** location = ArrayAddressOfElementAt(array, index);
     zeroHeapRef(location);
   }
 }
 
-void UpdateHeapRefIfNull(ObjHeader** location, const ObjHeader* object) {
+__attribute__((nothrow)) void UpdateHeapRefIfNull(ObjHeader** location, const ObjHeader* object) {
   updateHeapRefIfNull(location, object);
 }
 
@@ -3335,7 +3335,7 @@ OBJ_GETTER(SwapHeapRefLocked,
   RETURN_RESULT_OF(swapHeapRefLocked, location, expectedValue, newValue, spinlock, cookie);
 }
 
-void SetHeapRefLocked(ObjHeader** location, ObjHeader* newValue, int32_t* spinlock, int32_t* cookie) {
+__attribute__((nothrow)) void SetHeapRefLocked(ObjHeader** location, ObjHeader* newValue, int32_t* spinlock, int32_t* cookie) {
   setHeapRefLocked(location, newValue, spinlock, cookie);
 }
 
@@ -3347,17 +3347,17 @@ OBJ_GETTER(ReadHeapRefNoLock, ObjHeader* object, KInt index) {
   RETURN_RESULT_OF(readHeapRefNoLock, object, index);
 }
 
-void EnterFrameStrict(ObjHeader** start, int parameters, int count) {
+__attribute__((nothrow)) void EnterFrameStrict(ObjHeader** start, int parameters, int count) {
   enterFrame<true>(start, parameters, count);
 }
-void EnterFrameRelaxed(ObjHeader** start, int parameters, int count) {
+__attribute__((nothrow)) void EnterFrameRelaxed(ObjHeader** start, int parameters, int count) {
   enterFrame<false>(start, parameters, count);
 }
 
-void LeaveFrameStrict(ObjHeader** start, int parameters, int count) {
+__attribute__((nothrow)) void LeaveFrameStrict(ObjHeader** start, int parameters, int count) {
   leaveFrame<true>(start, parameters, count);
 }
-void LeaveFrameRelaxed(ObjHeader** start, int parameters, int count) {
+__attribute__((nothrow)) void LeaveFrameRelaxed(ObjHeader** start, int parameters, int count) {
   leaveFrame<false>(start, parameters, count);
 }
 
@@ -3473,11 +3473,11 @@ OBJ_GETTER(Kotlin_native_internal_GC_findCycle, KRef, KRef root) {
 #endif
 }
 
-KNativePtr CreateStablePointer(KRef any) {
+__attribute__((nothrow)) KNativePtr CreateStablePointer(KRef any) {
   return createStablePointer(any);
 }
 
-void DisposeStablePointer(KNativePtr pointer) {
+__attribute__((nothrow)) void DisposeStablePointer(KNativePtr pointer) {
   disposeStablePointer(pointer);
 }
 
@@ -3489,7 +3489,7 @@ OBJ_GETTER(AdoptStablePointer, KNativePtr pointer) {
   RETURN_RESULT_OF(adoptStablePointer, pointer);
 }
 
-bool ClearSubgraphReferences(ObjHeader* root, bool checked) {
+__attribute__((nothrow)) bool ClearSubgraphReferences(ObjHeader* root, bool checked) {
   return clearSubgraphReferences(root, checked);
 }
 
@@ -3506,7 +3506,7 @@ void MutationCheck(ObjHeader* obj) {
     ThrowInvalidMutabilityException(obj);
 }
 
-void CheckLifetimesConstraint(ObjHeader* obj, ObjHeader* pointee) {
+__attribute__((nothrow)) void CheckLifetimesConstraint(ObjHeader* obj, ObjHeader* pointee) {
   if (!obj->local() && pointee != nullptr && pointee->local()) {
     konan::consolePrintf("Attempt to store a stack object %p into a heap object %p\n", pointee, obj);
     konan::consolePrintf("This is a compiler bug, please report it to https://kotl.in/issue\n");
@@ -3522,7 +3522,7 @@ void Kotlin_Any_share(ObjHeader* obj) {
   shareAny(obj);
 }
 
-void AddTLSRecord(MemoryState* memory, void** key, int size) {
+__attribute__((nothrow)) void AddTLSRecord(MemoryState* memory, void** key, int size) {
   auto* tlsMap = memory->tlsMap;
   auto it = tlsMap->find(key);
   if (it != tlsMap->end()) {
@@ -3533,7 +3533,7 @@ void AddTLSRecord(MemoryState* memory, void** key, int size) {
   tlsMap->emplace(key, std::make_pair(start, size));
 }
 
-void ClearTLSRecord(MemoryState* memory, void** key) {
+__attribute__((nothrow)) void ClearTLSRecord(MemoryState* memory, void** key) {
   auto* tlsMap = memory->tlsMap;
   auto it = tlsMap->find(key);
   if (it != tlsMap->end()) {
@@ -3547,7 +3547,7 @@ void ClearTLSRecord(MemoryState* memory, void** key) {
   }
 }
 
-KRef* LookupTLS(void** key, int index) {
+__attribute__((nothrow)) KRef* LookupTLS(void** key, int index) {
   auto* state = memoryState;
   auto* tlsMap = state->tlsMap;
   // In many cases there is only one module, so this one element cache.
@@ -3564,19 +3564,19 @@ KRef* LookupTLS(void** key, int index) {
 }
 
 
-void GC_RegisterWorker(void* worker) {
+__attribute__((nothrow)) void GC_RegisterWorker(void* worker) {
 #if USE_CYCLIC_GC
   cyclicAddWorker(worker);
 #endif  // USE_CYCLIC_GC
 }
 
-void GC_UnregisterWorker(void* worker) {
+__attribute__((nothrow)) void GC_UnregisterWorker(void* worker) {
 #if USE_CYCLIC_GC
   cyclicRemoveWorker(worker, g_hasCyclicCollector);
 #endif  // USE_CYCLIC_GC
 }
 
-void GC_CollectorCallback(void* worker) {
+__attribute__((nothrow)) void GC_CollectorCallback(void* worker) {
 #if USE_CYCLIC_GC
   if (g_hasCyclicCollector)
     cyclicCollectorCallback(worker);
@@ -3604,7 +3604,7 @@ bool Kotlin_Any_isShareable(KRef thiz) {
     return thiz == nullptr || isShareable(containerFor(thiz));
 }
 
-void PerformFullGC() {
+__attribute__((nothrow)) void PerformFullGC() {
     garbageCollect(::memoryState, true);
 }
 

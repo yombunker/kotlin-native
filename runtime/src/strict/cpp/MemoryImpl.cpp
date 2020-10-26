@@ -29,39 +29,39 @@ OBJ_GETTER(InitSharedInstance,
   RETURN_RESULT_OF(InitSharedInstanceStrict, location, typeInfo, ctor);
 }
 
-void ReleaseHeapRef(const ObjHeader* object) {
+__attribute__((nothrow)) void ReleaseHeapRef(const ObjHeader* object) {
   ReleaseHeapRefStrict(object);
 }
 
-void ReleaseHeapRefNoCollect(const ObjHeader* object) {
+__attribute__((nothrow)) void ReleaseHeapRefNoCollect(const ObjHeader* object) {
   ReleaseHeapRefNoCollectStrict(object);
 }
 
-void SetStackRef(ObjHeader** location, const ObjHeader* object) {
+__attribute__((nothrow)) void SetStackRef(ObjHeader** location, const ObjHeader* object) {
   SetStackRefStrict(location, object);
 }
 
-void SetHeapRef(ObjHeader** location, const ObjHeader* object) {
+__attribute__((nothrow)) void SetHeapRef(ObjHeader** location, const ObjHeader* object) {
   SetHeapRefStrict(location, object);
 }
 
-void ZeroStackRef(ObjHeader** location) {
+__attribute__((nothrow)) void ZeroStackRef(ObjHeader** location) {
   ZeroStackRefStrict(location);
 }
 
-void UpdateHeapRef(ObjHeader** location, const ObjHeader* object) {
+__attribute__((nothrow)) void UpdateHeapRef(ObjHeader** location, const ObjHeader* object) {
   UpdateHeapRefStrict(location, object);
 }
 
-void UpdateReturnRef(ObjHeader** returnSlot, const ObjHeader* object) {
+__attribute__((nothrow)) void UpdateReturnRef(ObjHeader** returnSlot, const ObjHeader* object) {
   UpdateReturnRefStrict(returnSlot, object);
 }
 
-void EnterFrame(ObjHeader** start, int parameters, int count) {
+__attribute__((nothrow)) void EnterFrame(ObjHeader** start, int parameters, int count) {
   EnterFrameStrict(start, parameters, count);
 }
 
-void LeaveFrame(ObjHeader** start, int parameters, int count) {
+__attribute__((nothrow)) void LeaveFrame(ObjHeader** start, int parameters, int count) {
   LeaveFrameStrict(start, parameters, count);
 }
 
