@@ -65,7 +65,7 @@ RUNTIME_NOTHROW void LeaveFrame(ObjHeader** start, int parameters, int count) {
   LeaveFrameRelaxed(start, parameters, count);
 }
 
-void UpdateStackRef(ObjHeader** location, const ObjHeader* object) {
+RUNTIME_NOTHROW void UpdateStackRef(ObjHeader** location, const ObjHeader* object) {
     UpdateStackRefRelaxed(location, object);
 }
 
