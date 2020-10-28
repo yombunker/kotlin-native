@@ -107,7 +107,7 @@ extern "C" {
 
 #define OBJ_RESULT __result__
 #define OBJ_GETTER0(name) ObjHeader* name(ObjHeader** OBJ_RESULT)
-#define OBJ_GETTER(name, ...) RUNTIME_NOTHROW ObjHeader* name(__VA_ARGS__, ObjHeader** OBJ_RESULT)
+#define OBJ_GETTER(name, ...) ObjHeader* name(__VA_ARGS__, ObjHeader** OBJ_RESULT)
 #define RETURN_OBJ(value) { ObjHeader* __obj = value; \
     UpdateReturnRef(OBJ_RESULT, __obj);               \
     return __obj; }
