@@ -2009,6 +2009,7 @@ MemoryState* initMemory(bool firstRuntime) {
 #if USE_CYCLIC_GC
     cyclicInit();
 #endif  // USE_CYCLIC_GC
+    // TODO: if all runtimes are gone, and then the new one gets created, it should become "main" thread for legacy MM.
     memoryState->isMainThread = true;
   }
   return memoryState;
