@@ -76,13 +76,13 @@ inline bool isValidRuntime() {
 
 volatile int aliveRuntimesCount = 0;
 
-enum class GlobalRuntimeStatus {
-    kUninitialized,
-    kRunning,
-    kDestroyed,
+enum GlobalRuntimeStatus {
+    GLOBAL_RUNTIME_UNINITIALIZED = 0,
+    GLOBAL_RUNTIME_RUNNING,
+    GLOBAL_RUNTIME_DESTROYED,
 };
 
-volatile GlobalRuntimeStatus globalRuntimeStatus = GlobalRuntimeStatus::kUninitialized;
+volatile GlobalRuntimeStatus globalRuntimeStatus = GLOBAL_RUNTIME_UNINITIALIZED;
 
 RuntimeState* initRuntime() {
   SetKonanTerminateHandler();
@@ -90,8 +90,8 @@ RuntimeState* initRuntime() {
   if (!result) return kInvalidRuntime;
   RuntimeCheck(!isValidRuntime(), "No active runtimes allowed");
   ::runtimeState = result;
-  bool firstRuntime = compareAndSet(&globalRuntimeStatus, GlobalRuntimeStatus::kUninitialized, GlobalRuntimeStatus::kRunning);
-  RuntimeCheck(atomicGet(&globalRuntimeStatus) == GlobalRuntimeStatus::kRunning, "Must be running");
+  bool firstRuntime = compareAndSet(&globalRuntimeStatus, GLOBAL_RUNTIME_UNINITIALIZED, GLOBAL_RUNTIME_RUNNING);
+  RuntimeCheck(atomicGet(&globalRuntimeStatus) == GLOBAL_RUNTIME_RUNNING, "Must be running");
   atomicAdd(&aliveRuntimesCount, 1);
   result->memoryState = InitMemory(firstRuntime);
   result->worker = WorkerInit(true);
@@ -146,7 +146,7 @@ void AppendToInitializersTail(InitNode *next) {
 
 void Kotlin_initRuntimeIfNeeded() {
   if (!isValidRuntime()) {
-    if (atomicGet(&globalRuntimeStatus) == GlobalRuntimeStatus::kDestroyed) {
+    if (atomicGet(&globalRuntimeStatus) == GLOBAL_RUNTIME_DESTROYED) {
       konan::consoleErrorf("Kotlin runtime was previously destroyed. Cannot create new runtime.\n");
       konan::abort();
     }
@@ -164,7 +164,7 @@ void Kotlin_deinitRuntimeIfNeeded() {
 }
 
 void Kotlin_destroyRuntime() {
-    RuntimeAssert(atomicGet(&globalRuntimeStatus) == GlobalRuntimeStatus::kRunning, "Kotlin runtime must be running");
+    RuntimeAssert(atomicGet(&globalRuntimeStatus) == GLOBAL_RUNTIME_RUNNING, "Kotlin runtime must be running");
     RuntimeAssert(isValidRuntime(), "Current thread must have Kotlin runtime on it.");
 
     if (Kotlin_cleanersLeakCheckerEnabled()) {
@@ -178,7 +178,7 @@ void Kotlin_destroyRuntime() {
     }
     if (Kotlin_memoryLeakCheckerEnabled()) WaitNativeWorkersTermination();
 
-    atomicSet(&globalRuntimeStatus, GlobalRuntimeStatus::kDestroyed);
+    atomicSet(&globalRuntimeStatus, GLOBAL_RUNTIME_DESTROYED);
 
     auto otherRuntimesCount = atomicGet(&aliveRuntimesCount) - 1;
     RuntimeAssert(otherRuntimesCount >= 0, "Cannot be negative.");

@@ -674,8 +674,6 @@ struct MemoryState {
   #define DEINIT_STAT(state)
   #define PRINT_STAT(state)
 #endif // COLLECT_STATISTIC
-
-  bool isMainThread = false;
 };
 
 namespace {
@@ -2024,7 +2022,7 @@ MemoryState* initMemory(bool firstRuntime) {
 
 void deinitMemory(MemoryState* memoryState, bool destroyRuntime) {
 #if USE_GC
-  bool lastMemoryState = atomicAdd(&aliveMemoryStatesCount, -1) == 0;
+  atomicAdd(&aliveMemoryStatesCount, -1);
   if (destroyRuntime) {
    garbageCollect(memoryState, true);
 #if USE_CYCLIC_GC
