@@ -75,7 +75,14 @@ inline bool isValidRuntime() {
 }
 
 volatile int aliveRuntimesCount = 0;
-volatile bool runtimeDestroyed = false;
+
+enum class GlobalRuntimeStatus {
+    kUninitialized,
+    kRunning,
+    kDestroyed,
+};
+
+volatile GlobalRuntimeStatus globalRuntimeStatus = GlobalRuntimeStatus::kUninitialized;
 
 RuntimeState* initRuntime() {
   SetKonanTerminateHandler();
@@ -83,9 +90,11 @@ RuntimeState* initRuntime() {
   if (!result) return kInvalidRuntime;
   RuntimeCheck(!isValidRuntime(), "No active runtimes allowed");
   ::runtimeState = result;
-  result->memoryState = InitMemory();
+  bool firstRuntime = compareAndSet(&globalRuntimeStatus, GlobalRuntimeStatus::kUninitialized, GlobalRuntimeStatus::kRunning);
+  RuntimeCheck(atomicGet(&globalRuntimeStatus) == GlobalRuntimeStatus::kRunning, "Must be running");
+  atomicAdd(&aliveRuntimesCount, 1);
+  result->memoryState = InitMemory(firstRuntime);
   result->worker = WorkerInit(true);
-  bool firstRuntime = atomicAdd(&aliveRuntimesCount, 1) == 1;
   // Keep global variables in state as well.
   if (firstRuntime) {
     konan::consoleInit();
@@ -137,7 +146,7 @@ void AppendToInitializersTail(InitNode *next) {
 
 void Kotlin_initRuntimeIfNeeded() {
   if (!isValidRuntime()) {
-    if (atomicGet(&runtimeDestroyed)) {
+    if (atomicGet(&globalRuntimeStatus) == GlobalRuntimeStatus::kDestroyed) {
       konan::consoleErrorf("Kotlin runtime was previously destroyed. Cannot create new runtime.\n");
       konan::abort();
     }
@@ -155,6 +164,7 @@ void Kotlin_deinitRuntimeIfNeeded() {
 }
 
 void Kotlin_destroyRuntime() {
+    RuntimeAssert(atomicGet(&globalRuntimeStatus) == GlobalRuntimeStatus::kRunning, "Kotlin runtime must be running");
     RuntimeAssert(isValidRuntime(), "Current thread must have Kotlin runtime on it.");
 
     if (Kotlin_cleanersLeakCheckerEnabled()) {
@@ -168,7 +178,7 @@ void Kotlin_destroyRuntime() {
     }
     if (Kotlin_memoryLeakCheckerEnabled()) WaitNativeWorkersTermination();
 
-    atomicSet(&runtimeDestroyed, true);
+    atomicSet(&globalRuntimeStatus, GlobalRuntimeStatus::kDestroyed);
 
     auto otherRuntimesCount = atomicGet(&aliveRuntimesCount) - 1;
     RuntimeAssert(otherRuntimesCount >= 0, "Cannot be negative.");

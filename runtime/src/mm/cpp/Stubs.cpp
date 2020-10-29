@@ -47,7 +47,7 @@ static void destroyMetaObject(TypeInfo** location) {
 
 extern "C" {
 
-MemoryState* InitMemory() {
+MemoryState* InitMemory(bool firstRuntime) {
     RuntimeCheck(false, "Unimplemented");
 }
 

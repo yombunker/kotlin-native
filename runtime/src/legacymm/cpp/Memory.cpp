@@ -576,7 +576,7 @@ private:
         if (atomicGet(&aliveMemoryStatesCount) == 0)
           return;
 
-        memoryState = InitMemory(); // Required by ReleaseHeapRef.
+        memoryState = InitMemory(false); // Required by ReleaseHeapRef.
       }
 
       processEnqueuedReleaseRefsWith([](ObjHeader* obj) {
@@ -1978,7 +1978,7 @@ void deinitForeignRef(ObjHeader* object, ForeignRefManager* manager) {
   }
 }
 
-MemoryState* initMemory() {
+MemoryState* initMemory(bool firstRuntime) {
   RuntimeAssert(offsetof(ArrayHeader, typeInfoOrMeta_)
                 ==
                 offsetof(ObjHeader,   typeInfoOrMeta_),
@@ -2004,8 +2004,8 @@ MemoryState* initMemory() {
 #endif
   memoryState->tlsMap = konanConstructInstance<KThreadLocalStorageMap>();
   memoryState->foreignRefManager = ForeignRefManager::create();
-  bool firstMemoryState = atomicAdd(&aliveMemoryStatesCount, 1) == 1;
-  if (firstMemoryState) {
+  atomicAdd(&aliveMemoryStatesCount, 1);
+  if (firstRuntime) {
 #if USE_CYCLIC_GC
     cyclicInit();
 #endif  // USE_CYCLIC_GC
@@ -3220,8 +3220,8 @@ void AdoptReferenceFromSharedVariable(ObjHeader* object) {
 }
 
 // Public memory interface.
-MemoryState* InitMemory() {
-  return initMemory();
+MemoryState* InitMemory(bool firstRuntime) {
+  return initMemory(firstRuntime);
 }
 
 void DeinitMemory(MemoryState* memoryState, bool destroyRuntime) {
