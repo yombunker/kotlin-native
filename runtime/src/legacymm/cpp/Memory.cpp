@@ -674,6 +674,8 @@ struct MemoryState {
   #define DEINIT_STAT(state)
   #define PRINT_STAT(state)
 #endif // COLLECT_STATISTIC
+
+  bool isMainThread = false;
 };
 
 namespace {
@@ -2004,25 +2006,34 @@ MemoryState* initMemory(bool firstRuntime) {
 #endif
   memoryState->tlsMap = konanConstructInstance<KThreadLocalStorageMap>();
   memoryState->foreignRefManager = ForeignRefManager::create();
-  atomicAdd(&aliveMemoryStatesCount, 1);
+  bool firstMemoryState = atomicAdd(&aliveMemoryStatesCount, 1) == 1;
   if (firstRuntime) {
 #if USE_CYCLIC_GC
     cyclicInit();
 #endif  // USE_CYCLIC_GC
-    // TODO: if all runtimes are gone, and then the new one gets created, it should become "main" thread for legacy MM.
     memoryState->isMainThread = true;
+  }
+  if (!firstRuntime && firstMemoryState) {
+    memoryState->isMainThread = true;
+    // This thread is now the main thread. And there was a previous main thread, because this is not the first runtime.
+    // Make sure this thread sees all the updates to Kotlin globals from the previous main thread.
+    synchronize();
   }
   return memoryState;
 }
 
 void deinitMemory(MemoryState* memoryState, bool destroyRuntime) {
 #if USE_GC
-  atomicAdd(&aliveMemoryStatesCount, -1);
+  bool lastMemoryState = atomicAdd(&aliveMemoryStatesCount, -1) == 0;
   if (destroyRuntime) {
    garbageCollect(memoryState, true);
 #if USE_CYCLIC_GC
    cyclicDeinit(g_hasCyclicCollector);
 #endif  // USE_CYCLIC_GC
+  }
+  if (!destroyRuntime && memoryState->isMainThread) {
+    // If we are not destroying the runtime but we were the main thread, publish all changes to Kotlin globals.
+    synchronize();
   }
   // Actual GC only implemented in strict memory model at the moment.
   do {
