@@ -252,7 +252,6 @@ class CycleDetector {
 
 // TODO: can we pass this variable as an explicit argument?
 THREAD_LOCAL_VARIABLE MemoryState* memoryState = nullptr;
-THREAD_LOCAL_VARIABLE FrameOverlay* currentFrame = nullptr;
 
 #if COLLECT_STATISTIC
 class MemoryStatistic {
@@ -672,6 +671,8 @@ struct MemoryState {
   #define DEINIT_STAT(state)
   #define PRINT_STAT(state)
 #endif // COLLECT_STATISTIC
+
+  FrameOverlay* currentFrame = nullptr;
 };
 
 namespace {
@@ -1735,7 +1736,7 @@ inline size_t containerSize(const ContainerHeader* container) {
 
 #if USE_GC
 void incrementStack(MemoryState* state) {
-  FrameOverlay* frame = currentFrame;
+  FrameOverlay* frame = state->currentFrame;
   while (frame != nullptr) {
     ObjHeader** current = reinterpret_cast<ObjHeader**>(frame + 1) + frame->parameters;
     ObjHeader** end = current + frame->count - kFrameOverlaySlots - frame->parameters;
@@ -1779,7 +1780,7 @@ void processDecrements(MemoryState* state) {
 void decrementStack(MemoryState* state) {
   RuntimeAssert(IsStrictMemoryModel, "Only works in strict model now");
   state->gcSuspendCount++;
-  FrameOverlay* frame = currentFrame;
+  FrameOverlay* frame = state->currentFrame;
   while (frame != nullptr) {
     ObjHeader** current = reinterpret_cast<ObjHeader**>(frame + 1) + frame->parameters;
     ObjHeader** end = current + frame->count - kFrameOverlaySlots - frame->parameters;
@@ -2441,8 +2442,8 @@ void enterFrame(ObjHeader** start, int parameters, int count) {
   MEMORY_LOG("EnterFrame %p: %d parameters %d locals\n", start, parameters, count)
   FrameOverlay* frame = reinterpret_cast<FrameOverlay*>(start);
   if (Strict) {
-    frame->previous = currentFrame;
-    currentFrame = frame;
+    frame->previous = ::memoryState->currentFrame;
+    ::memoryState->currentFrame = frame;
     // TODO: maybe compress in single value somehow.
     frame->parameters = parameters;
     frame->count = count;
@@ -2454,7 +2455,7 @@ void leaveFrame(ObjHeader** start, int parameters, int count) {
   MEMORY_LOG("LeaveFrame %p: %d parameters %d locals\n", start, parameters, count)
   FrameOverlay* frame = reinterpret_cast<FrameOverlay*>(start);
   if (Strict) {
-    currentFrame = frame->previous;
+    ::memoryState->currentFrame = frame->previous;
   } else {
     ObjHeader** current = start + parameters + kFrameOverlaySlots;
     count -= parameters;
